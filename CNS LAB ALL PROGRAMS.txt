@@ -1,0 +1,301 @@
+CNS LAB MANUAL
+
+1. Write a C program that contains a string (char pointer) with a value ‘Hello world’. The program should
+XOR each character in this string with 0 and display the result?
+A).
+#include <stdio.h>
+
+int main() {
+     char *s = "Hello world";
+    for (int i = 0; s[i]; i++)
+        putchar(s[i] ^ 0);
+    return 0;
+}
+
+2. Write a C program that contains a string (char pointer) with a value ‘Hello world’. The program should
+AND or and XOR each character in this string with 127 and display the result?
+A).
+#include <stdio.h>
+
+int main() {
+    char *s = "Hello world";
+    for (int i = 0; s[i]; i++) {
+        char and_val = s[i] & 127;
+        char xor_val = and_val ^ 127;
+        printf("Character: %c, AND with 127: %d, XOR with 127: %d, XOR char: %c\n",
+               s[i], and_val, xor_val, xor_val);
+    }
+    return 0;
+}
+
+3. Write a Java program to perform encryption and decryption using the following algorithms
+a. Ceaser cipher b. Substitution cipher c. Hill Cipher 
+A).
+public class SimpleCiphers {
+
+    // Caesar Cipher
+    static String caesar(String s, int shift) {
+        StringBuilder r = new StringBuilder();
+        for (char c : s.toCharArray())
+            r.append((char)((c - 'A' + shift + 26) % 26 + 'A'));
+        return r.toString();
+    }
+
+    // Substitution Cipher
+    static String substitution(String s, String key, boolean encrypt) {
+        String abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        StringBuilder r = new StringBuilder();
+        for (char c : s.toCharArray()) {
+            int i = encrypt ? abc.indexOf(c) : key.indexOf(c);
+            r.append(encrypt ? key.charAt(i) : abc.charAt(i));
+        }
+        return r.toString();
+    }
+
+    // Hill Cipher 2x2 (with padding for odd length)
+    static String hillEncrypt(String s, int[][] k) {
+        if (s.length() % 2 != 0) s += "X"; // Add padding
+        StringBuilder r = new StringBuilder();
+        for (int i = 0; i < s.length(); i += 2) {
+            int a = s.charAt(i) - 'A', b = s.charAt(i+1) - 'A';
+            r.append((char) ((k[0][0]*a + k[0][1]*b) % 26 + 'A'));
+            r.append((char) ((k[1][0]*a + k[1][1]*b) % 26 + 'A'));
+        }
+        return r.toString();
+    }
+
+    public static void main(String[] args) {
+        String txt = "HELLO";
+        String key = "QWERTYUIOPASDFGHJKLZXCVBNM";
+        int[][] hillKey = {{3,3},{2,5}};
+
+        System.out.println("Caesar: " + caesar(txt, 3));
+        System.out.println("Substitution: " + substitution(txt, key, true));
+        System.out.println("Hill Encrypt: " + hillEncrypt(txt, hillKey));
+    }
+}
+
+4. Write a C/JAVA program to implement the DES algorithm logic?
+A).
+public class TinyDES {
+    static long round(long block, long key) {
+        long L = block >>> 32, R = block & 0xFFFFFFFFL;
+        return (R << 32) | (L ^ (R ^ key));
+    }
+
+    public static void main(String[] args) {
+        long data = 0x0123456789ABCDEFL, key = 0x133457799BBCDFF1L;
+        System.out.printf("Plain: %016X\n", data);
+        for (int i = 0; i < 16; i++) data = round(data, key ^ i);
+        System.out.printf("Cipher: %016X\n", data);
+    }
+}
+
+5. Write a C/JAVA program to implement the Blowfish algorithm logic?
+A).
+public class TinyBlowfish {
+    static int[] P = {0x243F6A88, 0x85A308D3, 0x13198A2E, 0x03707344,
+                      0xA4093822, 0x299F31D0, 0x082EFA98, 0xEC4E6C89,
+                      0x452821E6, 0x38D01377, 0xBE5466CF, 0x34E90C6C,
+                      0xC0AC29B7, 0xC97C50DD, 0x3F84D5B5, 0xB5470917,
+                      0x9216D5D9, 0x8979FB1B};
+
+    static int F(int x) {
+        return ((x >>> 24) + (x >>> 16)) ^ ((x >>> 8) + x);
+    }
+
+    static int[] process(int L, int R, boolean encrypt) {
+        int start = encrypt ? 0 : 17, end = encrypt ? 16 : 1, step = encrypt ? 1 : -1;
+        for (int i = start; encrypt ? i < end : i > end; i += step) {
+            L ^= P[i]; R ^= F(L);
+            int t = L; L = R; R = t;
+        }
+        int t = L; L = R; R = t;
+        R ^= P[encrypt ? 16 : 0]; L ^= P[encrypt ? 17 : 1];
+        return new int[]{L, R};
+    }
+
+    public static void main(String[] args) {
+        int L = 0x12345678, R = 0x9ABCDEF0;
+        System.out.printf("Original  : %08X %08X\n", L, R);
+        
+        int[] enc = process(L, R, true);
+        System.out.printf("Encrypted : %08X %08X\n", enc[0], enc[1]);
+        
+        int[] dec = process(enc[0], enc[1], false);
+        System.out.printf("Decrypted : %08X %08X\n", dec[0], dec[1]);
+    }
+}
+
+6.Write a C/JAVA program to implement the Rijndael algorithm logic?
+A).
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
+public class SimpleAES {
+    public static void main(String[] args) throws Exception {
+        String text = "HelloWorld123456"; 
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(128);         SecretKey key = keyGen.generateKey();
+
+        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+
+        // Encrypt
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        byte[] encrypted = cipher.doFinal(text.getBytes());
+        System.out.print("Encrypted (hex): ");
+        for (byte b : encrypted) System.out.printf("%02X", b);
+        System.out.println();
+
+        // Decrypt
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        byte[] decrypted = cipher.doFinal(encrypted);
+        System.out.println("Decrypted text : " + new String(decrypted));
+    }
+}
+
+7.Write the RC4 logic in Java Using Java cryptography; encrypt the text “Hello world” using Blowfish.
+Create your own key using Java key tool?
+A).
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.util.Base64;
+
+public class BlowfishExample {
+    public static void main(String[] args) throws Exception {
+        String plainText = "Hello world";
+
+        KeyGenerator keyGen = KeyGenerator.getInstance("Blowfish");
+        keyGen.init(128); 
+        SecretKey key = keyGen.generateKey();
+
+        Cipher cipher = Cipher.getInstance("Blowfish");
+
+        // Encrypt
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        byte[] encrypted = cipher.doFinal(plainText.getBytes());
+        String encryptedBase64 = Base64.getEncoder().encodeToString(encrypted);
+        System.out.println("Encrypted (Base64): " + encryptedBase64);
+
+        // Decrypt
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        byte[] decrypted = cipher.doFinal(encrypted);
+        System.out.println("Decrypted Text: " + new String(decrypted));
+    }
+}
+
+8.Write a Java program to implement the RSA algorithm?
+A).
+import java.security.*;
+import javax.crypto.Cipher;
+import java.util.Base64;
+
+public class SimpleRSA {
+    public static void main(String[] args) throws Exception {
+        String message = "Hello RSA";
+
+        
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048); // Key size
+        KeyPair keyPair = keyGen.generateKeyPair();
+
+        // Encrypt 
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, keyPair.getPublic());
+        byte[] encrypted = cipher.doFinal(message.getBytes());
+        String encryptedBase64 = Base64.getEncoder().encodeToString(encrypted);
+        System.out.println("Encrypted: " + encryptedBase64);
+
+        // Decrypt 
+        cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
+        byte[] decrypted = cipher.doFinal(encrypted);
+        System.out.println("Decrypted: " + new String(decrypted));
+    }
+}
+
+9.Implement the Diffie-Hellman Key Exchange mechanism using HTML and JavaScript. 
+A).
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diffie-Hellman</title>
+</head>
+<body>
+    <h2>Diffie-Hellman Key Exchange Algorithm</h2>
+    <button onclick="run()">Generate Keys</button>
+    <pre id="output"></pre>
+
+    <script>
+        function modPow(base, exp, mod) {
+            let res = 1;
+            base %= mod;
+            while (exp > 0) {
+                if (exp % 2) res = (res * base) % mod;
+                exp = Math.floor(exp / 2);
+                base = (base * base) % mod;
+            }
+            return res;
+        }
+
+        function run() {
+            const p = 23, g = 5;
+            const a = Math.floor(Math.random() * 10) + 1;
+            const b = Math.floor(Math.random() * 10) + 1;
+            const A = modPow(g, a, p);
+            const B = modPow(g, b, p);
+            const keyA = modPow(B, a, p);
+            const keyB = modPow(A, b, p);
+            
+            document.getElementById('output').textContent = 
+                `Public: p=${p}, g=${g}\n` +
+                `Alice: private=${a}, public=${A}, shared=${keyA}\n` +
+                `Bob: private=${b}, public=${B}, shared=${keyB}\n` +
+                `Keys Match: ${keyA === keyB}`;
+        }
+    </script>
+</body>
+</html>
+
+10.Calculate the message digest of a text using the SHA-1 algorithm in JAVA. 
+A).
+import java.security.MessageDigest;
+
+public class SHA1Example {
+    public static void main(String[] args) throws Exception {
+        String text = "Hello world";
+
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        byte[] digest = md.digest(text.getBytes("UTF-8"));
+
+       
+        StringBuilder sb = new StringBuilder();
+        for (byte b : digest) {
+            sb.append(String.format("%02x", b));
+        }
+
+        System.out.println("SHA-1 digest: " + sb.toString());
+    }
+}
+
+11.Calculate the message digest of a text using the MD5 algorithm in JAVA ?
+A).
+import java.security.MessageDigest;
+
+public class MD5Example {
+    public static void main(String[] args) throws Exception {
+        String text = "Hello world";
+
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] digest = md.digest(text.getBytes("UTF-8"));
+
+       StringBuilder sb = new StringBuilder();
+        for (byte b : digest) {
+            sb.append(String.format("%02x", b));
+        }
+
+        System.out.println("MD5 digest: " + sb.toString());
+    }
+}
+
